@@ -18,6 +18,10 @@ require 'etc'
 
 ENV['HOME'] = Etc.getpwuid(Process.uid).dir
 
+# Unfortunately fog doesn't give us happy fun times and provide a list of
+# supported regions like boto does
+regions = [ 'us-east-1', 'eu-west-1', 'us-west-1', 'us-west-2' 'ap-northeast-1', 'ap-southeast-1', 'ap-southeast-2', 'sa-east-1', ]
+
 require 'fog'
 require 'puppet'
 require 'puppet/ssl/certificate_request'
@@ -28,17 +32,28 @@ csr = Puppet::SSL::CertificateRequest.from_s(STDIN.read)
 pp_instance_id = csr.request_extensions.find { |a| a['oid'] == 'pp_instance_id' }
 instance_id = pp_instance_id['value']
 
-retcode = 0
+# Multi-region search, assume that nothing is happy by default
+retcode = 2
 
-ec2 = Fog::Compute::AWS.new({:use_iam_profile => true})
-server = ec2.servers.find { |s| s.id == instance_id }
+regions.each do |region|
+  ec2 = Fog::Compute::AWS.new({:use_iam_profile => true, :region => region})
+  server = ec2.servers.find { |s| s.id == instance_id }
+  # assume that we found a server in this region
+  if server
+    retcode = 0
+  end
 
-if csr.name != clientcert
-  retcode = 1
-elsif not server
-  retcode = 2
-elsif server.state != 'running'
-  retcode = 3
+  if csr.name != clientcert
+    retcode = 1
+  elsif not server
+    retcode = 2
+  elsif server.state != 'running'
+    retcode = 3
+  end
+
+  if retcode == 0
+    break
+  end
 end
 
 exit retcode
