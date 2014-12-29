@@ -1,0 +1,10 @@
+{
+  "name": "mrzarquon-certsigner",
+  "version": "0.1.0",
+  "author": ["Chris Barker <cbarker@puppetlabs.com>", "Vincent Janelle <vincent.janelle@ubnt.com>", "Robin Bowes <robin.bowes@yo61.com>"],
+  "license": "Licensed under (Apache 2.0)",
+  "summary": "Cloud seeding module",
+  "source": "https://github.com/mrzarquon/mrzarquon-certsigner",
+  "tags": ["puppet", "certsigner"],
+  "dependencies": [ ]
+}
